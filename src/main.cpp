@@ -17,6 +17,7 @@
 #define MIN_PLAYERS 2
 #define MAX_PLAYERS 10
 #define ROUND_DELAY_MILLIS 5000
+#define ACCEL_THRESHOLD 20.0
 
 double get_acceleration();
 
@@ -91,7 +92,13 @@ void play_game(uint8_t players) {
 
         uint64_t start = millis();
         while (millis() < start + ROUND_DELAY_MILLIS) {
-            if (get_acceleration() > 20.0) {
+            // Wait until acceleration crosses below threshold before triggering alarm for going above.
+            // This handles the circumstance in which the event is fired while the potato is mid-pass.
+            // This way, the accelerometer threshold will not be checked until the next person has caught the potato
+            // and/or it's decelerated enough to not trigger.
+            while (get_acceleration() > ACCEL_THRESHOLD) {}
+
+            if (get_acceleration() > ACCEL_THRESHOLD) {
                 digitalWrite(RED_LED, HIGH);
                 tone(SPEAKER, 440);
                 delay(3000);
