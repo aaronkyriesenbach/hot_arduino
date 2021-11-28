@@ -91,10 +91,12 @@ void play_game(uint8_t players) {
 
         uint64_t start = millis();
         while (millis() < start + ROUND_DELAY_MILLIS) {
-            if (get_acceleration() > 15.0) {
+            if (get_acceleration() > 20.0) {
                 digitalWrite(RED_LED, HIGH);
                 tone(SPEAKER, 440);
                 delay(3000);
+                digitalWrite(RED_LED, LOW);
+                noTone(SPEAKER);
                 break;
             }
         }
