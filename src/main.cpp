@@ -1,6 +1,7 @@
 #include <Arduino.h>
 #include <Adafruit_MMA8451.h>
 #include <time.h>
+#include <music.h>
 
 #define DOWN_BUTTON 4
 #define START_BUTTON 5
@@ -84,7 +85,7 @@ void play_game(uint8_t players) {
         uint8_t event = get_rand_int(0, 4);
 
         while (millis() < event_millis) {
-            // play_music();
+            play_music(SPEAKER);
         }
 
         // Begin event
