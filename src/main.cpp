@@ -20,11 +20,13 @@
 #define ROUND_DELAY_MILLIS 5000
 #define ACCEL_THRESHOLD 20.0
 
+void play_game(uint8_t players);
+
 double get_acceleration();
 
 int get_rand_int(int min, int max);
 
-void play_game(uint8_t players);
+void beep(uint8_t pin, uint8_t repetitions, long duration, long rest);
 
 Adafruit_MMA8451 mma = Adafruit_MMA8451();
 
@@ -60,18 +62,15 @@ void loop() {
     while (true) {
         if (!digitalRead(DOWN_BUTTON) && players > MIN_PLAYERS) {
             players--;
-            Serial.print("Players: ");
-            Serial.println(players);
+            beep(SPEAKER, players, 200, 50);
             delay(250);
         }
         if (!digitalRead(UP_BUTTON) && players < MAX_PLAYERS) {
             players++;
-            Serial.print("Players: ");
-            Serial.println(players);
+            beep(SPEAKER, players, 200, 50);
             delay(250);
         }
         if (!digitalRead(START_BUTTON)) {
-            Serial.println("Starting game");
             play_game(players);
             break;
         }
@@ -79,14 +78,14 @@ void loop() {
 }
 
 void play_game(uint8_t players) {
+    int starting_note = 0;
+
     while (players > 1) {
         // Time between 5 and 15 seconds in the future for an event to fire
-        uint64_t event_millis = millis() + get_rand_int(5000, 15000);
+        long event_millis = millis() + get_rand_int(5000, 15000);
         uint8_t event = get_rand_int(0, 4);
 
-        while (millis() < event_millis) {
-            play_music(SPEAKER);
-        }
+        starting_note = play_music(SPEAKER, event_millis, starting_note);
 
         // Begin event
         digitalWrite(event_leds[event], HIGH);
@@ -126,4 +125,13 @@ double get_acceleration() {
     mma.getEvent(&event);
 
     return sqrt(pow(event.acceleration.x, 2) + pow(event.acceleration.y, 2) + pow(event.acceleration.z, 2));
+}
+
+void beep(uint8_t pin, uint8_t repetitions, long duration, long rest) {
+    for (int i = 0; i < repetitions; i++) {
+        tone(pin, 440);
+        delay(duration);
+        noTone(pin);
+        delay(rest);
+    }
 }
