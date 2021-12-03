@@ -133,26 +133,27 @@ const uint16_t NUM_NOTES = sizeof(MELODY) / sizeof(MELODY[0]) / 2;
 uint16_t play_music(const uint8_t pin, const unsigned long duration, const uint16_t starting_note) {
     const unsigned long END_MILLIS = millis() + duration;
 
-    for (int thisNote = starting_note; thisNote < NUM_NOTES * 2; thisNote = thisNote + 2) {
+    uint16_t currentNote = starting_note;
 
-        if (millis() >= END_MILLIS) {
-            noTone(pin);
-            return thisNote;
-        }
-
+    while (millis() < END_MILLIS) {
         // Scale note duration by 1.5 if note is dotted (represented by negative duration)
-        const int8_t SHORTHAND_DURATION = MELODY[thisNote + 1];
-        const uint16_t noteDuration = WHOLE_NOTE_DURATION / abs(SHORTHAND_DURATION) * (SHORTHAND_DURATION < 0 ? 1.5 : 1);
+        const int8_t SHORTHAND_DURATION = MELODY[currentNote + 1];
+        const uint16_t noteDuration =
+                WHOLE_NOTE_DURATION / abs(SHORTHAND_DURATION) * (SHORTHAND_DURATION < 0 ? 1.5 : 1);
 
-        // Play note for 90% of duration
-        tone(pin, MELODY[thisNote], noteDuration);
+        tone(pin, MELODY[currentNote], noteDuration);
         delay(noteDuration);
 
-        // Reset to beginning of song if at end
-        if (thisNote == (NUM_NOTES - 1) * 2) {
-            thisNote = 0;
+        // If the current note is the last note, restart the song; otherwise, increment currentNote by 2
+        if (currentNote == (NUM_NOTES - 1) * 2) {
+            currentNote = 0;
+        } else {
+            currentNote += 2;
         }
     }
+
+    noTone(pin);
+    return currentNote;
 }
 
 #endif //HOT_ARDUINO_MUSIC_H
