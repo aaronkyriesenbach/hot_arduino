@@ -26,8 +26,6 @@ void play_game(uint8_t players);
 
 double get_acceleration();
 
-int get_rand_int(int min, int max);
-
 void beep(uint8_t pin, uint8_t repetitions, long duration, long rest);
 
 void toggle_motors(bool state);
@@ -94,8 +92,8 @@ void play_game(uint8_t players) {
 
     while (players > 1) {
         // Time between 5 and 15 seconds in the future for an event to fire
-        const unsigned long EVENT_MILLIS = millis() + get_rand_int(5000, 15000);
-        const uint8_t EVENT = get_rand_int(0, 4);
+        const unsigned long EVENT_MILLIS = millis() + random(5000, 15001);
+        const uint8_t EVENT = random(0, 5);
 
         // play_music() blocks execution until the event should fire, serving as the timer to the event.
         starting_note = play_music(SPEAKER, EVENT_MILLIS - millis(), starting_note);
@@ -134,10 +132,6 @@ void play_game(uint8_t players) {
             digitalWrite(LED_PINS[EVENT], HIGH);
         }
     }
-}
-
-int get_rand_int(const int min, const int max) {
-    return rand() % (max - min + 1) + min;
 }
 
 // Returns a double representing the overall acceleration of the MMA8451 in m/s^2. Note that at rest the acceleration
