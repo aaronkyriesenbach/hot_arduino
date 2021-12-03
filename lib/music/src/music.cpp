@@ -1,5 +1,5 @@
-#ifndef HOT_ARDUINO_MUSIC_H
-#define HOT_ARDUINO_MUSIC_H
+#include <music.h>
+#include <Arduino.h>
 
 #define NOTE_B0  31
 #define NOTE_C1  33
@@ -155,5 +155,3 @@ uint16_t play_music(const uint8_t pin, const unsigned long duration, const uint1
     noTone(pin);
     return currentNote;
 }
-
-#endif //HOT_ARDUINO_MUSIC_H
