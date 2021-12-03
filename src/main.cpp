@@ -32,6 +32,8 @@ void beep(uint8_t pin, uint8_t repetitions, long duration, long rest);
 
 void toggle_motors(bool state);
 
+void toggle_leds(bool state);
+
 Adafruit_MMA8451 mma = Adafruit_MMA8451();
 
 const uint8_t VIB_MOTOR_PINS[]{
@@ -100,11 +102,8 @@ void play_game(uint8_t players) {
 
         // If starting_note == 0, song/round is over
         if (starting_note == 0) {
-            // Turn on all LEDs, vibrate
-            for (const uint8_t PIN: LED_PINS) {
-                digitalWrite(PIN, HIGH);
-            }
-
+            // Turn on all LEDs and vibrate at end of round
+            toggle_leds(true);
             toggle_motors(true);
 
             // Yell at player if potato is passed after round ends
@@ -122,24 +121,19 @@ void play_game(uint8_t players) {
                 }
             }
 
-            for (const uint8_t led: LED_PINS) {
-                digitalWrite(led, LOW);
-            }
-
+            // Stop LEDs and vibration to begin next round
+            toggle_leds(false);
             toggle_motors(false);
 
             players--;
         } else {
+            // Ensure LED from previous event is off before starting event
+            toggle_leds(false);
+
             // Begin event
             digitalWrite(LED_PINS[EVENT], HIGH);
-            delay(ROUND_DELAY_MILLIS);
-            digitalWrite(LED_PINS[EVENT], LOW);
         }
     }
-
-    toggle_motors(true);
-    delay(5000);
-    toggle_motors(false);
 }
 
 int get_rand_int(const int min, const int max) {
@@ -166,7 +160,13 @@ void beep(uint8_t pin, uint8_t repetitions, long duration, long rest) {
 }
 
 void toggle_motors(const bool state) {
-    for (const uint8_t PIN : VIB_MOTOR_PINS) {
+    for (const uint8_t PIN: VIB_MOTOR_PINS) {
         digitalWrite(PIN, state);
+    }
+}
+
+void toggle_leds(const bool state) {
+    for (const uint8_t pin: LED_PINS) {
+        digitalWrite(pin, state);
     }
 }
