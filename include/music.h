@@ -146,7 +146,7 @@ uint16_t play_music(const uint8_t pin, const unsigned long duration, const uint1
 
         // If the current note is the last note, restart the song; otherwise, increment currentNote by 2
         if (currentNote == (NUM_NOTES - 1) * 2) {
-            currentNote = 0;
+            return 0;
         } else {
             currentNote += 2;
         }

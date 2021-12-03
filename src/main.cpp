@@ -3,6 +3,8 @@
 #include <time.h>
 #include <music.h>
 
+#define VIB_MOTOR_1 2
+
 #define DOWN_BUTTON 4
 #define START_BUTTON 5
 #define UP_BUTTON 6
@@ -28,9 +30,15 @@ int get_rand_int(int min, int max);
 
 void beep(uint8_t pin, uint8_t repetitions, long duration, long rest);
 
+void toggle_motors(bool state);
+
 Adafruit_MMA8451 mma = Adafruit_MMA8451();
 
-const uint8_t event_leds[]{
+const uint8_t VIB_MOTOR_PINS[]{
+        VIB_MOTOR_1
+};
+
+const uint8_t LED_PINS[]{
         YELLOW_LED,
         WHITE_LED,
         BLUE_LED,
@@ -45,11 +53,13 @@ void setup() {
     pinMode(START_BUTTON, INPUT_PULLUP);
     pinMode(UP_BUTTON, INPUT_PULLUP);
 
-    pinMode(YELLOW_LED, OUTPUT);
-    pinMode(WHITE_LED, OUTPUT);
-    pinMode(BLUE_LED, OUTPUT);
-    pinMode(RED_LED, OUTPUT);
-    pinMode(GREEN_LED, OUTPUT);
+    for (const uint8_t pin: VIB_MOTOR_PINS) {
+        pinMode(pin, OUTPUT);
+    }
+
+    for (const uint8_t pin: LED_PINS) {
+        pinMode(pin, OUTPUT);
+    }
 
     // Initialize MMA8451 accelerometer
     mma.begin();
@@ -62,12 +72,12 @@ void loop() {
     while (true) {
         if (!digitalRead(DOWN_BUTTON) && players > MIN_PLAYERS) {
             players--;
-            beep(SPEAKER, players, 200, 50);
+            beep(SPEAKER, players, 100, 25);
             delay(250);
         }
         if (!digitalRead(UP_BUTTON) && players < MAX_PLAYERS) {
             players++;
-            beep(SPEAKER, players, 200, 50);
+            beep(SPEAKER, players, 100, 25);
             delay(250);
         }
         if (!digitalRead(START_BUTTON)) {
@@ -82,35 +92,54 @@ void play_game(uint8_t players) {
 
     while (players > 1) {
         // Time between 5 and 15 seconds in the future for an event to fire
-        const unsigned long MILLIS_TILL_EVEMT = millis() + get_rand_int(5000, 15000);
-        const uint8_t event = get_rand_int(0, 4);
+        const unsigned long EVENT_MILLIS = millis() + get_rand_int(5000, 15000);
+        const uint8_t EVENT = get_rand_int(0, 4);
 
-        starting_note = play_music(SPEAKER, MILLIS_TILL_EVEMT, starting_note);
+        // play_music() blocks execution until the event should fire, serving as the timer to the event.
+        starting_note = play_music(SPEAKER, EVENT_MILLIS - millis(), starting_note);
 
-        // Begin event
-        digitalWrite(event_leds[event], HIGH);
-
-        const unsigned long start = millis();
-        while (millis() < start + ROUND_DELAY_MILLIS) {
-            // Wait until acceleration crosses below threshold before triggering alarm for going above.
-            // This handles the circumstance in which the event is fired while the potato is mid-pass.
-            // This way, the accelerometer threshold will not be checked until the next person has caught the potato
-            // and/or it's decelerated enough to not trigger.
-            while (get_acceleration() > ACCEL_THRESHOLD) {}
-
-            if (get_acceleration() > ACCEL_THRESHOLD) {
-                digitalWrite(RED_LED, HIGH);
-                tone(SPEAKER, 440);
-                delay(3000);
-                digitalWrite(RED_LED, LOW);
-                noTone(SPEAKER);
-                break;
+        // If starting_note == 0, song/round is over
+        if (starting_note == 0) {
+            // Turn on all LEDs, vibrate
+            for (const uint8_t PIN: LED_PINS) {
+                digitalWrite(PIN, HIGH);
             }
-        }
-        digitalWrite(event_leds[event], LOW);
 
-        players--;
+            toggle_motors(true);
+
+            // Yell at player if potato is passed after round ends
+            const unsigned long NEXT_ROUND_START = millis() + ROUND_DELAY_MILLIS;
+            while (millis() < NEXT_ROUND_START) {
+                // Wait until acceleration crosses below threshold before triggering alarm for going above.
+                // This handles the circumstance in which the round ends while the potato is mid-pass.
+                // This way, the accelerometer threshold will not be checked until the next person has caught the potato
+                // and/or it's decelerated enough to not trigger.
+                while (get_acceleration() > ACCEL_THRESHOLD) {}
+
+                if (get_acceleration() > ACCEL_THRESHOLD) {
+                    beep(SPEAKER, 1, 3000, 0);
+                    break;
+                }
+            }
+
+            for (const uint8_t led: LED_PINS) {
+                digitalWrite(led, LOW);
+            }
+
+            toggle_motors(false);
+
+            players--;
+        } else {
+            // Begin event
+            digitalWrite(LED_PINS[EVENT], HIGH);
+            delay(ROUND_DELAY_MILLIS);
+            digitalWrite(LED_PINS[EVENT], LOW);
+        }
     }
+
+    toggle_motors(true);
+    delay(5000);
+    toggle_motors(false);
 }
 
 int get_rand_int(const int min, const int max) {
@@ -133,5 +162,11 @@ void beep(uint8_t pin, uint8_t repetitions, long duration, long rest) {
         delay(duration);
         noTone(pin);
         delay(rest);
+    }
+}
+
+void toggle_motors(const bool state) {
+    for (const uint8_t PIN : VIB_MOTOR_PINS) {
+        digitalWrite(PIN, state);
     }
 }
