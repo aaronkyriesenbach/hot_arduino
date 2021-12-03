@@ -1,7 +1,3 @@
-//
-// Created by aaron on 11/30/21.
-//
-
 #ifndef HOT_ARDUINO_MUSIC_H
 #define HOT_ARDUINO_MUSIC_H
 
@@ -96,15 +92,14 @@
 #define NOTE_DS8 4978
 #define REST      0
 
+#define TEMPO 160
+#define WHOLE_NOTE_DURATION (60000 * 4) / TEMPO
 
-// change this to make the song slower or faster
-int tempo = 160;
-
-// notes of the moledy followed by the duration.
-// a 4 means a quarter note, 8 an eighteenth , 16 sixteenth, so on
-// !!negative numbers are used to represent dotted notes,
-// so -4 means a dotted quarter note, that is, a quarter plus an eighteenth!!
-int melody[] = {
+// Notes of the melody followed by the duration:
+// A 4 means a quarter note, 8 an eighteenth, 16 sixteenth, and so on.
+// Negative numbers are used to represent dotted notes,
+// so -4 means a dotted quarter note.
+const int16_t MELODY[] = {
 
         // Pink Panther theme
         // Score available at https://musescore.com/benedictsong/the-pink-panther
@@ -131,43 +126,30 @@ int melody[] = {
 
 };
 
-// sizeof gives the number of bytes, each int value is composed of two bytes (16 bits)
-// there are two values per note (pitch and duration), so for each note there are four bytes
-int notes = sizeof(melody) / sizeof(melody[0]) / 2;
+// Number of notes = memory usage of array / memory usage of a single element / 2 (because a note is represented by
+// two values, the note value and its duration
+const uint16_t NUM_NOTES = sizeof(MELODY) / sizeof(MELODY[0]) / 2;
 
-// this calculates the duration of a whole note in ms
-int wholenote = (60000 * 4) / tempo;
+uint16_t play_music(const uint8_t pin, const unsigned long duration, const uint16_t starting_note) {
+    const unsigned long END_MILLIS = millis() + duration;
 
-int divider = 0, noteDuration = 0;
+    for (int thisNote = starting_note; thisNote < NUM_NOTES * 2; thisNote = thisNote + 2) {
 
-int play_music(uint8_t pin, long duration, int starting_note) {
-    // iterate over the notes of the melody.
-    // Remember, the array is twice the number of notes (notes + durations)
-    long start_millis = millis();
-
-    for (int thisNote = starting_note; thisNote < notes * 2; thisNote = thisNote + 2) {
-
-        if (millis() >= start_millis + duration) {
+        if (millis() >= END_MILLIS) {
             noTone(pin);
             return thisNote;
         }
 
         // Scale note duration by 1.5 if note is dotted (represented by negative duration)
-        divider = melody[thisNote + 1];
-        if (divider > 0) {
-            noteDuration = (wholenote) / divider;
-        } else if (divider < 0) {
-            noteDuration = (wholenote) / abs(divider);
-            noteDuration *= 1.5;
-        }
+        const int8_t SHORTHAND_DURATION = MELODY[thisNote + 1];
+        const uint16_t noteDuration = WHOLE_NOTE_DURATION / abs(SHORTHAND_DURATION) * (SHORTHAND_DURATION < 0 ? 1.5 : 1);
 
         // Play note for 90% of duration
-        tone(pin, melody[thisNote], noteDuration * 0.9);
+        tone(pin, MELODY[thisNote], noteDuration);
         delay(noteDuration);
-        noTone(pin);
 
         // Reset to beginning of song if at end
-        if (thisNote == (notes - 1) * 2) {
+        if (thisNote == (NUM_NOTES - 1) * 2) {
             thisNote = 0;
         }
     }

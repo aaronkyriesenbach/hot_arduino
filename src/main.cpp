@@ -78,19 +78,19 @@ void loop() {
 }
 
 void play_game(uint8_t players) {
-    int starting_note = 0;
+    uint16_t starting_note = 0;
 
     while (players > 1) {
         // Time between 5 and 15 seconds in the future for an event to fire
-        long event_millis = millis() + get_rand_int(5000, 15000);
-        uint8_t event = get_rand_int(0, 4);
+        const unsigned long MILLIS_TILL_EVEMT = millis() + get_rand_int(5000, 15000);
+        const uint8_t event = get_rand_int(0, 4);
 
-        starting_note = play_music(SPEAKER, event_millis, starting_note);
+        starting_note = play_music(SPEAKER, MILLIS_TILL_EVEMT, starting_note);
 
         // Begin event
         digitalWrite(event_leds[event], HIGH);
 
-        uint64_t start = millis();
+        const unsigned long start = millis();
         while (millis() < start + ROUND_DELAY_MILLIS) {
             // Wait until acceleration crosses below threshold before triggering alarm for going above.
             // This handles the circumstance in which the event is fired while the potato is mid-pass.
