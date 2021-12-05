@@ -5,17 +5,17 @@
 
 #define VIB_MOTOR_1 2
 
-#define DOWN_BUTTON 4
-#define START_BUTTON 5
-#define UP_BUTTON 6
+#define DOWN_BUTTON 13
+#define START_BUTTON 12
+#define UP_BUTTON 11
 
-#define SPEAKER 7
+#define SPEAKER A0
 
-#define YELLOW_LED 8
+#define YELLOW_LED 10
 #define WHITE_LED 9
-#define BLUE_LED 10
-#define RED_LED 11
-#define GREEN_LED 12
+#define BLUE_LED 8
+#define RED_LED 7
+#define GREEN_LED 6
 
 #define MIN_PLAYERS 2
 #define MAX_PLAYERS 10
