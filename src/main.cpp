@@ -2,6 +2,7 @@
 #include <Adafruit_MMA8451.h>
 #include <time.h>
 #include <music.h>
+#include <ArduinoSTL.h>
 
 #define VIB_MOTOR_1 2
 
@@ -31,6 +32,8 @@ void beep(uint8_t pin, uint8_t repetitions, long duration, long rest);
 void toggle_motors(bool state);
 
 void toggle_leds(bool state);
+
+std::vector<uint8_t> get_potential_events(uint8_t PLAYERS, uint8_t STARTING_PLAYERS);
 
 Adafruit_MMA8451 mma = Adafruit_MMA8451();
 
@@ -89,14 +92,12 @@ void loop() {
 
 void play_game(uint8_t players) {
     uint16_t starting_note = 0;
+    const uint8_t STARTING_PLAYERS = players;
 
     while (players > 1) {
-        // Time between 5 and 15 seconds in the future for an event to fire
-        const unsigned long EVENT_MILLIS = millis() + random(5000, 15001);
-        const uint8_t EVENT = random(0, 5);
-
-        // play_music() blocks execution until the event should fire, serving as the timer to the event.
-        starting_note = play_music(SPEAKER, EVENT_MILLIS - millis(), starting_note);
+        // Play music starting at note index starting_note for a random amount of time between 3 and 5 seconds.
+        // play_music() blocks execution until the given duration has elapsed, serving as the timer till the event.
+        starting_note = play_music(SPEAKER, random(3000, 5000), starting_note);
 
         // If starting_note == 0, song/round is over
         if (starting_note == 0) {
@@ -125,11 +126,16 @@ void play_game(uint8_t players) {
 
             players--;
         } else {
+            // Get vector of all possible events given current and initial number of players
+            const std::vector<uint8_t> potential_events = get_potential_events(players, STARTING_PLAYERS);
+
             // Ensure LED from previous event is off before starting event
             toggle_leds(false);
 
-            // Begin event
-            digitalWrite(LED_PINS[EVENT], HIGH);
+            // Begin random event if an event is possible
+            if (!potential_events.empty()) {
+                digitalWrite(potential_events[random(0, potential_events.size())], HIGH);
+            }
         }
     }
 }
@@ -163,4 +169,29 @@ void toggle_leds(const bool state) {
     for (const uint8_t pin: LED_PINS) {
         digitalWrite(pin, state);
     }
+}
+
+// Exclude previous event from occurring again
+void conditional_add(std::vector<uint8_t> &VEC, const uint8_t LED) {
+    if (!digitalRead(LED)) {
+        VEC.push_back(LED);
+    }
+}
+
+std::vector<uint8_t> get_potential_events(const uint8_t PLAYERS, const uint8_t STARTING_PLAYERS) {
+    std::vector<uint8_t> vec;
+
+    conditional_add(vec, YELLOW_LED);
+    conditional_add(vec, RED_LED);
+    conditional_add(vec, GREEN_LED);
+
+    if (PLAYERS > 3) {
+        conditional_add(vec, WHITE_LED);
+    }
+
+    if (PLAYERS < STARTING_PLAYERS) {
+        conditional_add(vec, BLUE_LED);
+    }
+
+    return vec;
 }
