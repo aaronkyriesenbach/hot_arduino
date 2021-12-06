@@ -4,7 +4,12 @@
 #include <music.h>
 #include <ArduinoSTL.h>
 
-#define VIB_MOTOR_1 2
+#define VIB_MOTOR_1 A1
+#define VIB_MOTOR_2 A3
+#define VIB_MOTOR_3 5
+#define VIB_MOTOR_4 4
+#define VIB_MOTOR_5 3
+#define VIB_MOTOR_6 1
 
 #define DOWN_BUTTON 13
 #define START_BUTTON 12
@@ -21,7 +26,7 @@
 #define MIN_PLAYERS 2
 #define MAX_PLAYERS 10
 #define ROUND_DELAY_MILLIS 5000
-#define ACCEL_THRESHOLD 20.0
+#define ACCEL_THRESHOLD 35
 
 void play_game(uint8_t players);
 
@@ -38,7 +43,12 @@ std::vector<uint8_t> get_potential_events(uint8_t PLAYERS, uint8_t STARTING_PLAY
 Adafruit_MMA8451 mma = Adafruit_MMA8451();
 
 const uint8_t VIB_MOTOR_PINS[]{
-        VIB_MOTOR_1
+        VIB_MOTOR_1,
+        VIB_MOTOR_2,
+        VIB_MOTOR_3,
+        VIB_MOTOR_4,
+        VIB_MOTOR_5,
+        VIB_MOTOR_6
 };
 
 const uint8_t LED_PINS[]{
@@ -65,13 +75,16 @@ void setup() {
     }
 
     // Initialize MMA8451 accelerometer
-    mma.begin();
+    if (!mma.begin()) {
+        tone(SPEAKER, 440);
+    }
 
     srand(time(0));
 }
 
 void loop() {
     uint8_t players = MIN_PLAYERS;
+
     while (true) {
         if (!digitalRead(DOWN_BUTTON) && players > MIN_PLAYERS) {
             players--;
@@ -95,9 +108,12 @@ void play_game(uint8_t players) {
     const uint8_t STARTING_PLAYERS = players;
 
     while (players > 1) {
+
+        const uint16_t tempo = (players < 7) ? 240 - 20 * players : 100;
+
         // Play music starting at note index starting_note for a random amount of time between 3 and 5 seconds.
         // play_music() blocks execution until the given duration has elapsed, serving as the timer till the event.
-        starting_note = play_music(SPEAKER, random(3000, 5000), starting_note);
+        starting_note = play_music(SPEAKER, random(5000, 10000), starting_note, tempo);
 
         // If starting_note == 0, song/round is over
         if (starting_note == 0) {
@@ -116,7 +132,6 @@ void play_game(uint8_t players) {
 
                 if (get_acceleration() > ACCEL_THRESHOLD) {
                     beep(SPEAKER, 1, 3000, 0);
-                    break;
                 }
             }
 

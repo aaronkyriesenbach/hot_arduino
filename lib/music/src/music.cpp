@@ -92,9 +92,6 @@
 #define NOTE_DS8 4978
 #define REST      0
 
-#define TEMPO 160
-#define WHOLE_NOTE_DURATION (60000 * 4) / TEMPO
-
 // Notes of the melody followed by the duration:
 // A 4 means a quarter note, 8 an eighteenth, 16 sixteenth, and so on.
 // Negative numbers are used to represent dotted notes,
@@ -130,8 +127,9 @@ const int16_t MELODY[] = {
 // two values, the note value and its duration
 const uint16_t NUM_NOTES = sizeof(MELODY) / sizeof(MELODY[0]) / 2;
 
-uint16_t play_music(const uint8_t pin, const unsigned long duration, const uint16_t starting_note) {
+uint16_t play_music(const uint8_t pin, const unsigned long duration, const uint16_t starting_note, const uint16_t tempo) {
     const unsigned long END_MILLIS = millis() + duration;
+    const unsigned long WHOLE_NOTE_DURATION = (60000 * 4) / tempo;
 
     uint16_t currentNote = starting_note;
 
