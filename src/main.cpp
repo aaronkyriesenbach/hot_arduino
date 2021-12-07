@@ -20,13 +20,12 @@
 #define YELLOW_LED 10
 #define WHITE_LED 9
 #define BLUE_LED 8
-#define RED_LED 7
 #define GREEN_LED 6
 
 #define MIN_PLAYERS 2
 #define MAX_PLAYERS 10
 #define ROUND_DELAY_MILLIS 5000
-#define ACCEL_THRESHOLD 35
+#define ACCEL_THRESHOLD 30
 
 void play_game(uint8_t players);
 
@@ -55,7 +54,6 @@ const uint8_t LED_PINS[]{
         YELLOW_LED,
         WHITE_LED,
         BLUE_LED,
-        RED_LED,
         GREEN_LED
 };
 
@@ -131,6 +129,7 @@ void play_game(uint8_t players) {
                 while (get_acceleration() > ACCEL_THRESHOLD) {}
 
                 if (get_acceleration() > ACCEL_THRESHOLD) {
+                    toggle_motors(false);
                     beep(SPEAKER, 1, 3000, 0);
                 }
             }
@@ -150,6 +149,10 @@ void play_game(uint8_t players) {
             // Begin random event if an event is possible
             if (!potential_events.empty()) {
                 digitalWrite(potential_events[random(0, potential_events.size())], HIGH);
+
+                if (digitalRead(BLUE_LED)) {
+                    players++;
+                }
             }
         }
     }
@@ -197,7 +200,6 @@ std::vector<uint8_t> get_potential_events(const uint8_t PLAYERS, const uint8_t S
     std::vector<uint8_t> vec;
 
     conditional_add(vec, YELLOW_LED);
-    conditional_add(vec, RED_LED);
     conditional_add(vec, GREEN_LED);
 
     if (PLAYERS > 3) {
