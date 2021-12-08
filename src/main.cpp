@@ -86,12 +86,12 @@ void loop() {
     while (true) {
         if (!digitalRead(DOWN_BUTTON) && players > MIN_PLAYERS) {
             players--;
-            beep(SPEAKER, players, 100, 25);
+            beep(SPEAKER, players, 100, 50);
             delay(250);
         }
         if (!digitalRead(UP_BUTTON) && players < MAX_PLAYERS) {
             players++;
-            beep(SPEAKER, players, 100, 25);
+            beep(SPEAKER, players, 100, 50);
             delay(250);
         }
         if (!digitalRead(START_BUTTON)) {
@@ -206,7 +206,8 @@ std::vector<uint8_t> get_potential_events(const uint8_t PLAYERS, const uint8_t S
         conditional_add(vec, WHITE_LED);
     }
 
-    if (PLAYERS < STARTING_PLAYERS) {
+    // Reduce probability of resurrection
+    if (PLAYERS < STARTING_PLAYERS && random(0, 4) == 0) {
         conditional_add(vec, BLUE_LED);
     }
 
